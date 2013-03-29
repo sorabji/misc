@@ -1,0 +1,16 @@
+out_to_x no
+out_to_console yes
+/*out_to_ncurses yes*/
+background no
+update_interval 2
+total_run_times 0
+use_spacer none
+
+TEXT
+time: ${time %a %b %d %I:%M%P}
+cpu: ${cpu cpu0}% 
+loadavg: ${loadavg}
+mem: $memperc% ($mem/$memfree)
+disk: used: $fs_used free: $fs_free
+$wireless_essid wlan0
+

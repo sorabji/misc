@@ -1,0 +1,41 @@
+#!/bin/bash
+
+cd ~
+
+if [[ -f .bashrc ]];
+then
+	mv .bashrc .bashrc_OLD_LINK
+fi
+
+if [[ -f .bash_aliases ]];
+then
+	mv .bash_aliases .bash_aliases_OLD_LINK
+fi
+
+if [[ -f .pentadactylrc ]];
+then
+	mv .pentadactylrc .pentadactylrc_OLD_LINK
+fi
+
+if [[ -f .tmux.conf ]];
+then
+	mv .tmux.conf .tmux.conf_OLD_LINK
+fi
+
+if [[ -f .stumpwmrc ]];
+then
+	mv .stumpwmrc .stumpwmrc_OLD_LINK
+fi
+
+if [[ -f .zshrc ]];
+then
+	mv .zshrc .zshrc_OLD_LINK
+fi
+
+ln -s config/misc/zshrc${1} .zshrc
+ln -s config/misc/tmux${1} .tmux.conf
+ln -s config/misc/pentadactylrc${1} .pentadactylrc
+ln -s config/misc/stumpwmrc .stumpwmrc
+ln -s config/misc/bash_aliases${1} .bash_aliases
+ln -s config/misc/bashrc${1} .bashrc
+

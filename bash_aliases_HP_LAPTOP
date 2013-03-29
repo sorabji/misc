@@ -1,0 +1,21 @@
+#ls
+alias ll='ls -alF'
+alias la='ls -A'
+alias l='ls -CF'
+alias treet='tree -Csu' 
+alias u='popd'
+alias d='pushd'
+
+alias g='git'
+
+alias m='cmatrix -sab -u 2'
+alias vless='/usr/share/vim/vim72/macros/less.sh'
+alias lock='gnome-screensaver-command --lock'
+
+#wms
+alias dwm='/home/laptop/build/dwm-5.9/dwm'
+alias stumpwm='/home/laptop/build/stumpwm/stumpwm'
+
+alias wgetmp3='wget -e robots=off -r -nc -np --accept mp3'
+alias wgetm3u='wget -e robots=off -r -nc -np --accept m3u'
+alias wgetjpg='wget -e robots=off -r -nc -np --accept jpg'

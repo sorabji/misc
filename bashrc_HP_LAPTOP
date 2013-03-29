@@ -1,0 +1,249 @@
+#fucking java
+export JAVA_HOME=/usr/lib/jvm/java-6-openjdk/
+export LASTDIR="/"
+
+# If not running interactively, don't do anything
+[ -z "$PS1" ] && return
+
+# don't put duplicate lines in the history. See bash(1) for more options
+# ... or force ignoredups and ignorespace
+HISTCONTROL=ignoredups:ignorespace
+
+# append to the history file, don't overwrite it
+shopt -s histappend
+shopt -s histverify
+
+# for setting history length see HISTSIZE and HISTFILESIZE in bash(1)
+HISTSIZE=1000
+HISTFILESIZE=2000
+HISTTIMEFORMAT="%Y-%m-%d %H:%M:%S "
+
+# check the window size after each command and, if necessary,
+# update the values of LINES and COLUMNS.
+shopt -s checkwinsize
+
+
+PS1="%  "
+
+# Alias definitions.
+# You may want to put all your additions into a separate file like
+# ~/.bash_aliases, instead of adding them here directly.
+# See /usr/share/doc/bash-doc/examples in the bash-doc package.
+
+if [ -f ~/.bash_aliases ]; then
+    . ~/.bash_aliases
+fi
+
+# enable programmable completion features (you don't need to enable
+# this, if it's already enabled in /etc/bash.bashrc and /etc/profile
+# sources /etc/bash.bashrc).
+if [ -f /etc/bash_completion ] && ! shopt -oq posix; then
+    . /etc/bash_completion
+fi
+
+
+export PLAN9=/usr/local/plan9
+
+# path ...
+PATH=$PATH:/home/laptop/config/bin:/home/laptop/build/bin/bin:/home/laptop/.stumpwm.d/contrib/:/usr/local/plan9/bin:/usr/local/go/bin
+
+export PATH=$PATH:~/dev/chase/goshit/bin
+export GOPATH=~/dev/chase/goshit
+
+# editor
+export EDITOR=/usr/bin/vim
+
+# Sets the Mail Environment Variable
+MAIL=/var/spool/mail/artie && export MAIL
+
+# find a file with a pattern in name:
+ff() { find . -type f -iname '*'$*'*' -ls ; }
+
+# Find a pattern in a set of files and highlight them:
+# (needs a recent version of egrep)
+function fstr()
+{
+    OPTIND=1
+    local case=""
+    local usage="fstr: find string in files.
+Usage: fstr [-i] \"pattern\" [\"filename pattern\"] "
+    while getopts :it opt
+    do
+case "$opt" in
+        i) case="-i " ;;
+        *) echo "$usage"; return;;
+        esac
+done
+shift $(( $OPTIND - 1 ))
+    if [ "$#" -lt 1 ]; then
+echo "$usage"
+        return;
+    fi
+find . -type f -name "${2:-*}" -print0 | \
+    xargs -0 egrep --color=always -sn ${case} "$1" 2>&- | more
+
+}
+
+function swap() # Swap 2 filenames around, if they exist
+{ #(from Uzi's bashrc).
+    local TMPFILE=tmp.$$
+
+    [ $# -ne 2 ] && echo "swap: 2 arguments needed" && return 1
+    [ ! -e $1 ] && echo "swap: $1 does not exist" && return 1
+    [ ! -e $2 ] && echo "swap: $2 does not exist" && return 1
+
+    mv "$1" $TMPFILE
+    mv "$2" "$1"
+    mv $TMPFILE "$2"
+}
+
+function extract() # Handy Extract Program.
+{
+     if [ -f $1 ] ; then
+case $1 in
+             *.tar.bz2) tar xvjf $1 ;;
+             *.tar.gz) tar xvzf $1 ;;
+             *.bz2) bunzip2 $1 ;;
+             *.rar) unrar x $1 ;;
+             *.gz) gunzip $1 ;;
+             *.tar) tar xvf $1 ;;
+             *.tbz2) tar xvjf $1 ;;
+             *.tgz) tar xvzf $1 ;;
+             *.zip) unzip $1 ;;
+             *.Z) uncompress $1 ;;
+             *.7z) 7z x $1 ;;
+             *) echo "'$1' cannot be extracted via >extract<" ;;
+         esac
+else
+echo "'$1' is not a valid file"
+     fi
+}
+
+function my_ps() { ps $@ -u $USER -o pid,%cpu,%mem,bsdtime,command ; }
+function pp() { my_ps f | awk '!/awk/ && $0~var' var=${1:-".*"} ; }
+
+
+function killps() # Kill by process name.
+{
+    local pid pname sig="-TERM" # Default signal.
+    if [ "$#" -lt 1 ] || [ "$#" -gt 2 ]; then
+echo "Usage: killps [-SIGNAL] pattern"
+        return;
+    fi
+if [ $# = 2 ]; then sig=$1 ; fi
+for pid in $(my_ps| awk '!/awk/ && $0~pat { print $1 }' pat=${!#} ) ; do
+pname=$(my_ps | awk '$1~var { print $5 }' var=$pid )
+        if ask "Kill process $pid <$pname> with signal $sig?"
+            then kill $sig $pid
+        fi
+done
+}
+
+function my_ip() # Get IP adresses.
+{
+    MY_IP=$(/sbin/ifconfig eth1 | awk '/inet/ { print $2 } ' | \
+sed -e s/addr://)
+    MY_ISP=$(/sbin/ifconfig eth1 | awk '/P-t-P/ { print $3 } ' | \
+sed -e s/P-t-P://)
+}
+
+function ii() # Get current host related info.
+{
+    echo -e "\nYou are logged on ${RED}$HOST"
+    echo -e "\nAdditionnal information:$NC " ; uname -a
+    echo -e "\n${RED}Users logged on:$NC " ; w -h
+    echo -e "\n${RED}Current date :$NC " ; date
+    echo -e "\n${RED}Machine stats :$NC " ; uptime
+    echo -e "\n${RED}Memory stats :$NC " ; free
+    my_ip 2>&- ;
+    echo -e "\n${RED}Local IP Address :$NC" ; echo ${MY_IP:-"Not connected"}
+    echo -e "\n${RED}ISP Address :$NC" ; echo ${MY_ISP:-"Not connected"}
+    echo -e "\n${RED}Open connections :$NC "; netstat -pan --inet;
+    echo
+}
+
+function ask() # See 'killps' for example of use.
+{
+    echo -n "$@" '[y/n] ' ; read ans
+    case "$ans" in
+        y*|Y*) return 0 ;;
+        *) return 1 ;;
+    esac
+}
+
+function cs () {
+    cd $1
+    ls
+}
+
+# Bash Colors index
+# ------------------------------------------------
+color_index() {
+  # Show an index of all available bash colors
+  echo -e "\n              Usage: \\\033[*;**(;**)m"
+  echo -e   "            Default: \\\033[0m"
+  local blank_line="\033[0m\n     \033[0;30;40m$(printf "%41s")\033[0m"
+  echo -e "$blank_line" # Top border
+  for STYLE in 2 0 1 4 9; do
+    echo -en "     \033[0;30;40m "
+    # Display black fg on white bg
+    echo -en "\033[${STYLE};30;47m${STYLE};30\033[0;30;40m "
+    for FG in $(seq 31 37); do
+        CTRL="\033[${STYLE};${FG};40m"
+        echo -en "${CTRL}"
+        echo -en "${STYLE};${FG}\033[0;30;40m "
+    done
+    echo -e "$blank_line" # Separators
+  done
+  echo -en "     \033[0;30;40m "
+  # Background colors
+  echo -en "\033[0;37;40m*;40\033[0;30;40m \033[0m" # Display white fg on black bg
+  for BG in $(seq 41 47); do
+      CTRL="\033[0;30;${BG}m"
+      echo -en "${CTRL}"
+      echo -en "*;${BG}\033[0;30;40m "
+  done
+  echo -e "$blank_line" "\n" # Bottom border
+}
+
+# A shortcut function that simplifies usage of xclip.
+# # - Accepts input from either stdin (pipe), or params.
+# # - If the input is a filename that exists, then it
+# #   uses the contents of that file.
+# # ------------------------------------------------
+cb() {
+    local _scs_col="\e[0;32m"; local _wrn_col='\e[1;31m'; local _trn_col='\e[0;33m'
+    # Check that xclip is installed.
+    if ! type xclip > /dev/null 2>&1; then
+        echo -e "$_wrn_col""You must have the 'xclip' program installed.\e[0m"
+    # Check user is not root (root doesn't have access to user xorg server)
+    elif [[ "$USER" == "root" ]]; then
+        echo -e "$_wrn_col""Must be regular user (not root) to copy a file to the clipboard.\e[0m"
+    else
+        # If no tty, data should be available on stdin
+        if ! [[ "$( tty )" == /dev/* ]]; then
+            input="$(< /dev/stdin)"
+        # Else, fetch input from params
+        else
+            input="$*"
+        fi
+        if [ -z "$input" ]; then  # If no input, print usage message.
+            echo "Copies a string or the contents of a file to the clipboard."
+            echo "Usage: cb <string or file>"
+            echo "       echo <string or file> | cb"
+        else
+            # If the input is a filename that exists, then use the contents of that file.
+            if [ -f "$input" ]; then input="$(cat $input)"; fi
+            # Copy input to clipboard
+            echo -n "$input" | xclip -selection c
+            # Truncate text for status
+            if [ ${#input} -gt 80 ]; then input="$(echo $input | cut -c1-80)$_trn_col...\e[0m"; fi
+            # Print status.
+            echo -e "$_scs_col""Copied to clipboard:\e[0m $input"
+        fi
+    fi
+}
+# Shortcut to copy SSH public key to clipboard.
+alias cb_ssh="cb ~/.ssh/id_rsa.pub"
+
+

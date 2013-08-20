@@ -35,3 +35,5 @@ export PATH=$PATH:~/bin:/usr/local/go/bin
 export PATH=$PATH:~/dev/chase/goshit/bin
 export GOPATH=~/dev/chase/goshit
 
+
+PATH=$PATH:$HOME/.rvm/bin # Add RVM to PATH for scripting

@@ -7,6 +7,11 @@ alias u='popd'
 alias d='pushd'
 
 alias g='git'
+alias glog='git log --pretty=oneline'
+alias gst='git status'
+alias gbr='git branch'
+alias gco='git checkout'
+alias gcob='git checkout -b'
 
 alias m='cmatrix -sab -u 2'
 alias vless='/usr/share/vim/vim72/macros/less.sh'

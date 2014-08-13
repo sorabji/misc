@@ -3,6 +3,8 @@
 
 (setf *default-package* :stumpwm)
 
+;; (load "~/build/stumpwm/contrib/stumptray.lisp")
+;; (load "~/build/stumpwm/contrib/window-tags.lisp")
                     ;(load "~/build/stumpwm/contrib/battery.lisp")
                     ;(load "~/build/stumpwm/contrib/aumix.lisp")
                     ;(load "~/build/stumpwm/contrib/battery-portable.lisp")
@@ -24,7 +26,9 @@
 
 (defparameter terminal "terminator")
 
-(set-font "-*-courier-medium-r-normal--18-*-*-*-*-*-*-*")
+(setf *default-font* "-unknown-Monaco-normal-normal-normal-*-13-*-*-*-m-0-fontset-auto1")
+(set-font *default-font*)
+;(set-font "-*-courier-medium-r-normal--18-*-*-*-*-*-*-*")
 
 (set-prefix-key       (kbd "C-z"))
 (set-focus-color      "DarkRed")
@@ -32,7 +36,7 @@
 (set-win-bg-color     "black")
 (set-fg-color         "lightgray")
 (set-bg-color         "black")
-(set-normal-gravity   :center)
+(set-normal-gravity   :bottom-right)
 (setq *shell-program* (stumpwm::getenv "SHELL"))
 (defvar *regular-map* "aoeuid")
 (defvar *shifted-map* "AOEUID")
@@ -63,7 +67,9 @@
  *window-format*                   "«%n%s%m%10c»")
 
 (setf *screen-mode-line-format*
-      (list "[ %D | %c (%f) %t | %M | BAT: %B ]"))
+      (list "[ %D | %c (%f) %t | %M | BAT: %B | "
+            '(:eval (stumpwm:run-shell-command "date" t))))
+      ;; (list "[ %D | %c (%f) %t | %M | BAT: %B ]"))
       ;(list (stumpwm:run-shell-command "acpi")))
 (enable-mode-line (current-screen) (current-head) T)
 
@@ -150,7 +156,7 @@
 
 (defcommand dmenu () ()
         "Runs the dmenu program"
-        (run-shell-command "dmenu_run -i -nb '#000000' -nf '#777777' -sb '#770000' -sf '#ffffff' -fn '-*-courier-medium-r-normal-*-25-*-*-*-*-*-*-*' -p '> '"))
+        (run-shell-command (concatenate 'string "dmenu_run -i -nb '#000000' -nf '#777777' -sb '#770000' -sf '#ffffff' -fn '" *default-font* "' -p '> '")))
 
 (defcommand emacs () ()
         "Start emacs unless it is already running, in which case focus it."
@@ -168,9 +174,9 @@
         "Start gnome-terminal unless it is already running, in which case focus it."
         (run-or-raise "gnome-terminal" '(:class "Gnome-term")))
 
-(defcommand thunderbird () ()
-        "Start thunderbird unless it is already running, in which case focus it."
-        (run-or-raise "thunderbird" '(:class "Thunderbird")))
+(defcommand terminator () ()
+        "Start terminator unless it is already running, in which case focus it."
+        (run-or-raise "terminator" '(:class "Terminator")))
 
 (defcommand pidgin () ()
         "Start pidgin unless it is already running, in which case focus it."
@@ -180,9 +186,13 @@
         "Lookup a command in man"
         (run-shell-command (format nil "~A -e sh -c 'man ~A'" terminal man)))
 
-(defcommand exec-in-terminal (program) ((:rest "urxvt -e: "))
+(defcommand hipchat () ()
+  "Start hipchat unless it is already running, in which case focux it"
+  (run-or-raise "hipchat" '(:class "Hipchat")))
+
+(defcommand exec-in-terminal (program) ((:rest "xterm -e: "))
         "Run in terminal"
-        (run-shell-command (format nil "urxvt -e ~A" program)))
+        (run-shell-command (format nil "xterm -e ~A" program)))
 
 (defcommand scratchpad () ()
         "Toggle the scratchpad"
@@ -225,27 +235,25 @@
  "grename main"
  "gnewbg www"
  "gnewbg chat"
- "gnewbg mail"
+ "gnewbg music"
  "gnewbg term"
  "gnewbg vim"
  "gnewbg emacs"
- "gnewbg *******")
+ "gnewbg *******"
+ "gselect www"
+ )
 
 ;; add more commands here to run at startup
 (defcommand startup () ()
-        (run-shell-command "~/config/bin/swapCaps")
-        (run-commands "change-bg"))
-                    ;(run-commands
-                    ;"change-bg"
-                    ;"startup"
-                    ;"gnext"
-                    ;"firefox"
-                    ;"gnext"
-                    ;"pidgin"
-                    ;"gnext")
-                    ;"thunderbird"))
+            (run-commands "set-contrib-dir /home/herb/build/stumpwm-contrib")
+            (run-commands "change-bg" "stumptray")
+            (run-commands "change-bg" "stumptray")
+            (run-shell-command "~/config/bin/swapCaps")
+            (run-shell-command "nm-applet &")
+            (run-shell-command "synclient TouchpadOff=1")
+            (run-shell-command "gnome-sound-applet &"))
 
-(run-commands "startup")
+;; (run-commands "startup")
 
 ;; Key bindings
 ;; TOP
@@ -295,11 +303,12 @@
     (define-key m (kbd "f") "firefox")
     (define-key m (kbd "g") "gnome-terminal")
     (define-key m (kbd "c") "chromium-browser")
-    (define-key m (kbd "t") "thunderbird")
+    (define-key m (kbd "t") "terminator")
     (define-key m (kbd "p") "pidgin")
     (define-key m (kbd "r") "dmenu")
     (define-key m (kbd "e") "emacs")
     (define-key m (kbd "l") "exec xlock")
+    (define-key m (kbd "h") "hipchat")
     (define-key m (kbd "Print") "exec xlock")
     (define-key m (kbd "a") "alsamix")
     (define-key m (kbd "S") "screenshot")
@@ -384,6 +393,29 @@
     (define-key m (kbd "w") "windows")
     m))
 
+(setq *tag-map*
+  (let ((m (make-sparse-keymap)))
+    (define-key m (kbd "t") "tag-window")
+    (define-key m (kbd "c") "window-tags")
+    m))
+
+                    ; Submaps
+(define-key *root-map* (kbd "F1") '*help-map*)
+(define-key *root-map* (kbd "e") '*exec-map*)
+(define-key *root-map* (kbd "C-e") '*exec-map*)
+(define-key *root-map* (kbd "g") '*groups-map*)
+(define-key *root-map* (kbd "C-g") '*groups-map*)
+(define-key *root-map* (kbd "y") '*clipboard-yank-map*)
+(define-key *root-map* (kbd "p") '*clipboard-put-map*)
+(define-key *root-map* (kbd "a") '*status-map*)
+(define-key *root-map* (kbd "C-a") '*status-map*)
+(define-key *root-map* (kbd "w") '*window-map*)
+(define-key *root-map* (kbd "C-w") '*window-map*)
+(define-key *root-map* (kbd "S") '*surfraw-map*)
+(define-key *root-map* (kbd "r") '*resize-map*)
+(define-key *root-map* (kbd "C-r") '*resize-map*)
+(define-key *root-map* (kbd "t") '*tag-map*)
+(define-key *root-map* (kbd "C-t") '*tag-map*)
                     ; Windows
 (define-key *root-map* (kbd "&") "run-top")
 (define-key *root-map* (kbd "o") "only")
@@ -418,7 +450,6 @@
 (define-key *root-map* (kbd "'") "windowlist")
 (define-key *root-map* (kbd "\"") "select")
 (define-key *root-map* (kbd "-") "fclear")
-(define-key *root-map* (kbd "C-t") "other")
 (define-key *root-map* (kbd "C-r") "iresize")
 (define-key *root-map* (kbd "C-w") "windows")
 (define-key *root-map* (kbd "f") "fselect")
@@ -429,21 +460,6 @@
 (define-key *root-map* (kbd "S-TAB") "fprev")
 (define-key *root-map* (kbd "C-n") "pull-hidden-next")
 (define-key *root-map* (kbd "C-p") "pull-hidden-previous")
-                    ; Submaps
-(define-key *root-map* (kbd "F1") '*help-map*)
-(define-key *root-map* (kbd "e") '*exec-map*)
-(define-key *root-map* (kbd "C-e") '*exec-map*)
-(define-key *root-map* (kbd "g") '*groups-map*)
-(define-key *root-map* (kbd "C-g") '*groups-map*)
-(define-key *root-map* (kbd "y") '*clipboard-yank-map*)
-(define-key *root-map* (kbd "p") '*clipboard-put-map*)
-(define-key *root-map* (kbd "a") '*status-map*)
-(define-key *root-map* (kbd "C-a") '*status-map*)
-(define-key *root-map* (kbd "w") '*window-map*)
-(define-key *root-map* (kbd "C-w") '*window-map*)
-(define-key *root-map* (kbd "S") '*surfraw-map*)
-(define-key *root-map* (kbd "r") '*resize-map*)
-(define-key *root-map* (kbd "C-r") '*resize-map*)
 
                     ; Exec
 (define-key *root-map* (kbd "V") "exec gvim")
